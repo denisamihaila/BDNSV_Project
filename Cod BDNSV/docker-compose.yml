@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: bdnsv_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=parola_secreta
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:latest
+    container_name: bdnsv_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning --maxmemory 300mb --maxmemory-policy allkeys-lru
+    # --save 60 = salveaza pe disk la fiecare 60 de secunde daca s-a efectuat o modificare
+    # --maxmemory 200mb = limiteaza Redisul pentru a folosi maxim 300mb de RAM
+    # --maxmemory-policy allkeys-lru = LRU. Cand se umple memoria, sterge cele mai vechi date
+    volumes:
+      - redis_data:/data
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: bdnsv_redis_gui
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+
+volumes:
+  mongo_data:
+  redis_data:
